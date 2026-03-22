@@ -428,11 +428,12 @@ function renderPdfList() {
   pdfFiles.forEach((p, i) => {
     const item = document.createElement('div');
     item.className = 'pdf-item';
-    const statusMap = { pending: '— bereit', loading: '⏳ wird analysiert …', done: '✓ erkannt', err: '✗ Fehler' };
+    const statusMap = { pending: '— bereit', loading: '⏳ wird analysiert …', done: p => `✓ ${p.count||1} Position${(p.count||1)>1?'en':''}`, err: p => `✗ ${p.errorMsg||'Fehler'}` };
     const statusClass = { pending: '', loading: 'loading', done: 'done', err: 'err' };
+    const statusText = typeof statusMap[p.status] === 'function' ? statusMap[p.status](p) : statusMap[p.status];
     item.innerHTML = `
       <span class="pdf-item-name">${p.name}</span>
-      <span class="pdf-item-status ${statusClass[p.status]}" id="pdfStatus${i}">${statusMap[p.status]}</span>
+      <span class="pdf-item-status ${statusClass[p.status]}" id="pdfStatus${i}" title="${p.errorMsg||''}">${statusText}</span>
       <button class="pos-delete" onclick="removePdf(${i})">×</button>
     `;
     el.appendChild(item);
@@ -474,12 +475,7 @@ async function processPdfs() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
-          system: `Du bist ein Experte für deutsche Nebenkostenabrechnungen. Analysiere das PDF und extrahiere Kostenart, Betrag und enthaltene Vorsteuer. 
-Antworte NUR mit einem JSON-Objekt (kein Markdown, keine Erklärungen):
-{"name": "Kostenart", "betrag": 123.45, "vost": 19.61}
-- name: Kurze Bezeichnung (z.B. "Gas", "Wasser", "Gebäudeversicherung", "Grundsteuer", "Hausmeister")
-- betrag: Gesamtbetrag in Euro als Zahl (Bruttobetrag inkl. USt, nicht der Mieteranteil)
-- vost: Im Betrag enthaltene Vorsteuer in Euro (0 wenn keine USt ausgewiesen ist)`,
+          system: `Du bist ein Experte für deutsche Nebenkostenabrechnungen. Analysiere das PDF und extrahiere ALLE enthaltenen Kostenpositionen (Gas, Wasser, Versicherung, Grundsteuer, Hausmeister, Strom usw.). Antworte NUR mit einem JSON-Array - kein Markdown, kein Text davor oder danach, nur das Array: [{"name":"Kostenart","betrag":123.45,"vost":19.61}]. name: Kurze Bezeichnung. betrag: Gesamtbetrag in Euro (Bruttobetrag inkl. USt). vost: Im Betrag enthaltene Vorsteuer in Euro (0 wenn keine USt). Enthält das PDF mehrere Abrechnungen, jeden als eigenen Eintrag. Bei einer Position trotzdem als Array mit einem Element.`,
           messages: [{
             role: 'user',
             content: [{
@@ -487,33 +483,38 @@ Antworte NUR mit einem JSON-Objekt (kein Markdown, keine Erklärungen):
               source: { type: 'base64', media_type: 'application/pdf', data: b64 }
             }, {
               type: 'text',
-              text: 'Extrahiere Kostenart und Gesamtbetrag aus dieser Abrechnung.'
+              text: 'Extrahiere alle Kostenpositionen aus diesem PDF.'
             }]
           }]
         })
       });
 
       const data = await response.json();
+      if (data.error) throw new Error(data.error.message || 'API-Fehler');
       const raw = data.content?.map(c => c.text || '').join('') || '';
       const clean = raw.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
+      let parsed = JSON.parse(clean);
+      if (!Array.isArray(parsed)) parsed = [parsed];
 
       pf.result = parsed;
       pf.status = 'done';
+      pf.count = parsed.length;
 
-      // Position hinzufügen
-      positionen.push({
-        name: parsed.name || pf.name.replace('.pdf', ''),
-        gesamt: parsed.betrag || 0,
-        anteil: parsed.betrag || 0,
-        vost: parsed.vost || 0
+      parsed.forEach(item => {
+        positionen.push({
+          name: item.name || pf.name.replace('.pdf', ''),
+          gesamt: item.betrag || 0,
+          anteil: item.betrag || 0,
+          vost: item.vost || 0
+        });
       });
       renderPositionen();
       berechne();
 
     } catch (err) {
       pf.status = 'err';
-      console.error(err);
+      pf.errorMsg = err.message || String(err);
+      console.error('PDF-Fehler:', pf.name, err);
     }
     renderPdfList();
   }
