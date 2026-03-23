@@ -130,6 +130,7 @@ textarea{resize:vertical;min-height:60px;}
   .pos-table th:nth-child(3),.pos-table td:nth-child(3){display:none;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -160,8 +161,8 @@ textarea{resize:vertical;min-height:60px;}
   <div class="card" style="padding:20px 32px;">
     <div class="card-title">Abrechnungsart</div>
     <div class="ust-toggle">
-      <button class="ust-btn active" id="btn-mit-ust" onclick="setUst(true)">Mit Umsatzsteuer (Gewerblich)</button>
-      <button class="ust-btn" id="btn-ohne-ust" onclick="setUst(false)">Ohne Umsatzsteuer (Privat)</button>
+      <button class="ust-btn active" id="btn-mit-ust" onclick="setUst(true)">Mit Umsatzsteuer</button>
+      <button class="ust-btn" id="btn-ohne-ust" onclick="setUst(false)">Ohne Umsatzsteuer</button>
     </div>
     <div class="hint" id="ust-hint">Mieter ist vorsteuerabzugsberechtigt. Vorsteueranteil wird aus abzugsfähigen Kosten herausgerechnet.</div>
   </div>
@@ -172,21 +173,21 @@ textarea{resize:vertical;min-height:60px;}
     <div class="grid2">
       <div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Vermieter</div>
-        <label><span class="lbl">Name / Firma</span><input type="text" id="v_name" value="Susanne Schmitt"></label>
-        <label><span class="lbl">Straße, Hausnummer</span><input type="text" id="v_strasse" value="Bühlstraße 50"></label>
-        <label><span class="lbl">PLZ, Ort</span><input type="text" id="v_plz" value="79576 Weil am Rhein"></label>
+        <label><span class="lbl">Name / Firma</span><input type="text" id="v_name" placeholder="Name oder Firma"></label>
+        <label><span class="lbl">Straße, Hausnummer</span><input type="text" id="v_strasse" placeholder="Straße, Hausnummer"></label>
+        <label><span class="lbl">PLZ, Ort</span><input type="text" id="v_plz" placeholder="PLZ, Ort"></label>
       </div>
       <div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Mieter</div>
-        <label><span class="lbl">Firma</span><input type="text" id="m_firma" value="xyz GmbH"></label>
-        <label><span class="lbl">Ansprechpartner</span><input type="text" id="m_person" value="Herrn xy"></label>
-        <label><span class="lbl">PLZ, Ort</span><input type="text" id="m_plz" value="79591 Eimeldingen"></label>
+        <label><span class="lbl">Firma</span><input type="text" id="m_firma" placeholder="Firma"></label>
+        <label><span class="lbl">Ansprechpartner</span><input type="text" id="m_person" placeholder="Ansprechpartner"></label>
+        <label><span class="lbl">PLZ, Ort</span><input type="text" id="m_plz" placeholder="PLZ, Ort"></label>
       </div>
     </div>
     <div class="grid3" style="margin-top:8px;">
-      <label><span class="lbl">Abrechnungsjahr</span><input type="text" id="jahr" value="2024"></label>
+      <label><span class="lbl">Abrechnungsjahr</span><input type="text" id="jahr"></label>
       <label><span class="lbl">Rechnungsdatum</span><input type="date" id="datum"></label>
-      <label><span class="lbl">USt-Satz (%)</span><input type="number" id="ust_satz" value="19" min="0" max="100" oninput="berechne()"></label>
+      <label><span class="lbl">USt-Satz (%)</span><input type="text" id="ust_satz" value="19" class="num-input" oninput="berechne()"></label>
     </div>
     <label style="margin-top:8px;"><span class="lbl">Mietgegenstand / Objekt (optional)</span><input type="text" id="objekt" placeholder="z.B. Büroräume EG, Musterstraße 1, 79XXX Musterstadt"></label>
   </div>
@@ -238,8 +239,8 @@ textarea{resize:vertical;min-height:60px;}
   <div class="card">
     <div class="card-title">Vorauszahlungen des Mieters</div>
     <div class="grid2">
-      <label><span class="lbl">Netto-Vorauszahlung (€)</span><input type="number" id="vz_netto" value="1200" oninput="berechne()"></label>
-      <label><span class="lbl" id="lbl-vz-ust">USt auf Vorauszahlung (€)</span><input type="number" id="vz_ust" value="228" oninput="berechne()"></label>
+      <label><span class="lbl">Netto-Vorauszahlung (€)</span><input type="text" id="vz_netto" value="0" class="num-input" oninput="berechne()"></label>
+      <label><span class="lbl" id="lbl-vz-ust">USt auf Vorauszahlung (€)</span><input type="text" id="vz_ust" value="0" class="num-input" oninput="berechne()"></label>
     </div>
   </div>
 
@@ -248,12 +249,12 @@ textarea{resize:vertical;min-height:60px;}
     <div class="card-title">Bankverbindung</div>
     <div class="grid2">
       <div>
-        <label><span class="lbl">Kontoinhaber</span><input type="text" id="bk_inhaber" value="Susanne Schmitt"></label>
+        <label><span class="lbl">Kontoinhaber</span><input type="text" id="bk_inhaber" placeholder="Kontoinhaber"></label>
         <label><span class="lbl">IBAN</span><input type="text" id="bk_iban" placeholder="DE00 0000 0000 0000 0000 00"></label>
       </div>
       <div>
-        <label><span class="lbl">BIC</span><input type="text" id="bk_bic" value="VOLODE66XXX"></label>
-        <label><span class="lbl">Bank</span><input type="text" id="bk_bank" value="Volksbank Dreiländereck"></label>
+        <label><span class="lbl">BIC</span><input type="text" id="bk_bic" placeholder="z.B. SSKMDEMMXXX"></label>
+        <label><span class="lbl">Bank</span><input type="text" id="bk_bank" placeholder="Bankname"></label>
       </div>
     </div>
   </div>
@@ -270,7 +271,9 @@ textarea{resize:vertical;min-height:60px;}
   <div style="display:flex;gap:12px;flex-wrap:wrap;">
     <button class="btn btn-primary" onclick="berechne()" style="flex:1;min-width:180px;">Berechnung aktualisieren</button>
     <button class="btn btn-secondary" onclick="drucken()" style="flex:1;min-width:180px;">Abrechnung drucken / PDF</button>
-    <button class="btn btn-secondary" onclick="exportJson()" style="flex:1;min-width:180px;">Daten speichern (JSON)</button>
+    <button class="btn btn-secondary" onclick="exportExcel()" style="flex:1;min-width:180px;">Export (Excel)</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('importInput').click()" style="flex:1;min-width:180px;">Import (Excel)</button>
+    <input type="file" id="importInput" accept=".xlsx,.json" style="display:none" onchange="importFile(this)">
   </div>
 
   <!-- ══ DRUCKBEREICH ══ -->
@@ -346,10 +349,10 @@ function renderPositionen() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="text" value="${p.name}" placeholder="z.B. Heizung" oninput="positionen[${i}].name=this.value;berechne()"></td>
-      <td><input type="number" value="${p.gesamt}" placeholder="0.00" oninput="positionen[${i}].gesamt=parseFloat(this.value)||0;berechne()"></td>
-      <td><input type="number" value="${p.anteil}" placeholder="0.00" oninput="positionen[${i}].anteil=parseFloat(this.value)||0;berechne()"></td>
+      <td><input type="text" value="${fmtInput(p.gesamt)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].gesamt=parseEU(this.value);berechne()"></td>
+      <td><input type="text" value="${fmtInput(p.anteil)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].anteil=parseEU(this.value);berechne()"></td>
       <td class="col-vost" style="${mitUst?'':'display:none'}">
-        <input type="number" value="${p.vost||0}" placeholder="0.00" min="0" step="0.01" oninput="positionen[${i}].vost=parseFloat(this.value)||0;berechne()">
+        <input type="text" value="${fmtInput(p.vost||0)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].vost=parseEU(this.value);berechne()">
       </td>
       <td style="text-align:center;"><button class="pos-delete" onclick="removePosition(${i})">×</button></td>
     `;
@@ -363,9 +366,9 @@ function fmt(v) {
 }
 
 function berechne() {
-  const ustSatz = (parseFloat(document.getElementById('ust_satz').value) || 19) / 100;
-  const vzNetto = parseFloat(document.getElementById('vz_netto').value) || 0;
-  const vzUst = parseFloat(document.getElementById('vz_ust').value) || 0;
+  const ustSatz = (parseEU(document.getElementById('ust_satz').value) || 19) / 100;
+  const vzNetto = parseEU(document.getElementById('vz_netto').value) || 0;
+  const vzUst = parseEU(document.getElementById('vz_ust').value) || 0;
   const vzGesamt = mitUst ? vzNetto + vzUst : vzNetto;
 
   // Anteilsberechnung
@@ -529,9 +532,9 @@ async function processPdfs() {
 
 /* ── Drucken ── */
 function drucken() {
-  const ustSatz = (parseFloat(document.getElementById('ust_satz').value) || 19) / 100;
-  const vzNetto = parseFloat(document.getElementById('vz_netto').value) || 0;
-  const vzUst = parseFloat(document.getElementById('vz_ust').value) || 0;
+  const ustSatz = (parseEU(document.getElementById('ust_satz').value) || 19) / 100;
+  const vzNetto = parseEU(document.getElementById('vz_netto').value) || 0;
+  const vzUst = parseEU(document.getElementById('vz_ust').value) || 0;
   const vzGesamt = mitUst ? vzNetto + vzUst : vzNetto;
   const jahr = document.getElementById('jahr').value;
   const datum = new Date(document.getElementById('datum').value).toLocaleDateString('de-DE');
@@ -573,48 +576,67 @@ function drucken() {
     `;
   }
 
-  const html = `
-    <html><head><meta charset="UTF-8">
-    <style>
-      body{font-family:Arial,sans-serif;font-size:13px;color:#111;margin:40px;}
-      h2{font-size:20px;margin-bottom:4px;}
-      table{width:100%;border-collapse:collapse;}
-      .label{color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;}
-    </style>
-    </head><body>
-    <p>${document.getElementById('v_name').value}<br>${document.getElementById('v_strasse').value}<br>${document.getElementById('v_plz').value}</p>
-    <br>
-    <p><strong>${document.getElementById('m_firma').value}</strong><br>${document.getElementById('m_person').value}<br>${document.getElementById('m_plz').value}</p>
-    <br>
-    <h2>Nebenkostenabrechnung ${jahr}</h2>
-    <p style="color:#666;font-size:12px;">Weil am Rhein, ${datum}${document.getElementById('objekt').value ? ' · ' + document.getElementById('objekt').value : ''}</p>
-    <br>
-    <table>
-      <thead><tr style="border-bottom:2px solid #333;">
-        <th style="text-align:left;padding:6px 0;" class="label">Kosten</th>
-        <th style="text-align:right;padding:6px 0;" class="label">Ihr Anteil</th>
-        ${mitUst ? '<th style="text-align:right;padding:6px 0;" class="label">VoSt-Anteil</th>' : ''}
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <br>
-    <table>${ergebnisRows}</table>
-    <br><br>
-    <p><strong>Bankverbindung</strong><br>
-    Kontoinhaber: ${document.getElementById('bk_inhaber').value}<br>
-    IBAN: ${document.getElementById('bk_iban').value}<br>
-    BIC: ${document.getElementById('bk_bic').value} · ${document.getElementById('bk_bank').value}</p>
-    </body></html>
-  `;
+  const vName = document.getElementById('v_name').value;
+  const vStrasse = document.getElementById('v_strasse').value;
+  const vPlz = document.getElementById('v_plz').value;
+  const mFirma = document.getElementById('m_firma').value;
+  const mPerson = document.getElementById('m_person').value;
+  const mPlz = document.getElementById('m_plz').value;
+  const objekt = document.getElementById('objekt').value;
+  const bkInhaber = document.getElementById('bk_inhaber').value;
+  const bkIban = document.getElementById('bk_iban').value;
+  const bkBic = document.getElementById('bk_bic').value;
+  const bkBank = document.getElementById('bk_bank').value;
+  const vostHeader = mitUst ? '<th style="text-align:right;padding:6px 0;" class="label">VoSt-Anteil</th>' : '';
+  const ortZeile = objekt ? datum + ' &middot; ' + objekt : datum;
+
+  const parts = [
+    '<html><head><meta charset="UTF-8"><style>',
+    'body{font-family:Arial,sans-serif;font-size:13px;color:#111;margin:40px;}',
+    'h2{font-size:20px;margin-bottom:4px;}',
+    'table{width:100%;border-collapse:collapse;}',
+    '.label{color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;}',
+    '</style></head><body>',
+    '<p>' + vName + '<br>' + vStrasse + '<br>' + vPlz + '</p><br>',
+    '<p><strong>' + mFirma + '</strong><br>' + mPerson + '<br>' + mPlz + '</p><br>',
+    '<h2>Nebenkostenabrechnung ' + jahr + '</h2>',
+    '<p style="color:#666;font-size:12px;">' + ortZeile + '</p><br>',
+    '<table><thead><tr style="border-bottom:2px solid #333;">',
+    '<th style="text-align:left;padding:6px 0;" class="label">Kosten</th>',
+    '<th style="text-align:right;padding:6px 0;" class="label">Ihr Anteil</th>',
+    vostHeader,
+    '</tr></thead><tbody>' + rows + '</tbody></table><br>',
+    '<table>' + ergebnisRows + '</table><br><br>',
+    '<p><strong>Bankverbindung</strong><br>',
+    'Kontoinhaber: ' + bkInhaber + '<br>',
+    'IBAN: ' + bkIban + '<br>',
+    'BIC: ' + bkBic + ' &middot; ' + bkBank + '</p>',
+    '</body></html>'
+  ];
   const w = window.open('', '_blank');
-  w.document.write(html);
+  w.document.write(parts.join(''));
   w.document.close();
   w.print();
 }
 
-/* ── Export JSON ── */
-function exportJson() {
-  const data = {
+
+/* ── EU-Zahlenformat ── */
+function parseEU(s) {
+  if (s === null || s === undefined) return 0;
+  const str = String(s).trim().replace(/\./g, '').replace(',', '.');
+  return parseFloat(str) || 0;
+}
+function fmtInput(v) {
+  if (!v && v !== 0) return '';
+  return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+}
+function setNumInput(id, v) {
+  document.getElementById(id).value = fmtInput(v);
+}
+
+/* ── Sammle alle Formulardaten ── */
+function collectData() {
+  return {
     vermieter: {
       name: document.getElementById('v_name').value,
       strasse: document.getElementById('v_strasse').value,
@@ -628,12 +650,12 @@ function exportJson() {
     jahr: document.getElementById('jahr').value,
     datum: document.getElementById('datum').value,
     mitUst,
-    ustSatz: document.getElementById('ust_satz').value,
+    ustSatz: parseEU(document.getElementById('ust_satz').value),
     objekt: document.getElementById('objekt').value,
     positionen,
     vorauszahlungen: {
-      netto: document.getElementById('vz_netto').value,
-      ust: document.getElementById('vz_ust').value,
+      netto: parseEU(document.getElementById('vz_netto').value),
+      ust: parseEU(document.getElementById('vz_ust').value),
     },
     bankverbindung: {
       inhaber: document.getElementById('bk_inhaber').value,
@@ -642,11 +664,115 @@ function exportJson() {
       bank: document.getElementById('bk_bank').value,
     }
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `nebenkostenabrechnung-${data.jahr}.json`;
-  a.click();
+}
+
+/* ── Excel Export ── */
+function exportExcel() {
+  const d = collectData();
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Stammdaten
+  const stamm = [
+    ['Feld', 'Wert'],
+    ['Vermieter Name', d.vermieter.name],
+    ['Vermieter Straße', d.vermieter.strasse],
+    ['Vermieter PLZ/Ort', d.vermieter.plz],
+    ['Mieter Firma', d.mieter.firma],
+    ['Mieter Person', d.mieter.person],
+    ['Mieter PLZ/Ort', d.mieter.plz],
+    ['Abrechnungsjahr', d.jahr],
+    ['Rechnungsdatum', d.datum],
+    ['Mit Umsatzsteuer', d.mitUst ? 'Ja' : 'Nein'],
+    ['USt-Satz (%)', d.ustSatz],
+    ['Objekt', d.objekt],
+    ['VZ Netto', d.vorauszahlungen.netto],
+    ['VZ USt', d.vorauszahlungen.ust],
+    ['Bank Inhaber', d.bankverbindung.inhaber],
+    ['Bank IBAN', d.bankverbindung.iban],
+    ['Bank BIC', d.bankverbindung.bic],
+    ['Bank Name', d.bankverbindung.bank],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(stamm);
+  ws1['!cols'] = [{wch:22},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Stammdaten');
+
+  // Sheet 2: Positionen
+  const posRows = [['Kostenart', 'Gesamtkosten (€)', 'Ihr Anteil (€)', 'VoSt (€)']];
+  d.positionen.forEach(p => posRows.push([p.name, p.gesamt||0, p.anteil||0, p.vost||0]));
+  const ws2 = XLSX.utils.aoa_to_sheet(posRows);
+  ws2['!cols'] = [{wch:28},{wch:18},{wch:18},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Positionen');
+
+  XLSX.writeFile(wb, `nebenkostenabrechnung-${d.jahr}.xlsx`);
+}
+
+/* ── Excel/JSON Import ── */
+function importFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.name.endsWith('.json')) {
+    const r = new FileReader();
+    r.onload = e => { try { applyData(JSON.parse(e.target.result)); } catch(err) { alert('Fehler: ' + err.message); } };
+    r.readAsText(file);
+  } else {
+    const r = new FileReader();
+    r.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array' });
+        const stamm = XLSX.utils.sheet_to_json(wb.Sheets['Stammdaten'], { header: 1 });
+        const pos   = XLSX.utils.sheet_to_json(wb.Sheets['Positionen'], { header: 1 });
+        const map = {};
+        stamm.slice(1).forEach(([k,v]) => { map[k] = v; });
+        const positionen2 = pos.slice(1).map(r => ({
+          name: r[0]||'', gesamt: r[1]||0, anteil: r[2]||0, vost: r[3]||0
+        }));
+        applyData({
+          vermieter: { name: map['Vermieter Name']||'', strasse: map['Vermieter Straße']||'', plz: map['Vermieter PLZ/Ort']||'' },
+          mieter: { firma: map['Mieter Firma']||'', person: map['Mieter Person']||'', plz: map['Mieter PLZ/Ort']||'' },
+          jahr: map['Abrechnungsjahr']||'',
+          datum: map['Rechnungsdatum']||'',
+          mitUst: map['Mit Umsatzsteuer'] === 'Ja',
+          ustSatz: map['USt-Satz (%)']||19,
+          objekt: map['Objekt']||'',
+          positionen: positionen2,
+          vorauszahlungen: { netto: map['VZ Netto']||0, ust: map['VZ USt']||0 },
+          bankverbindung: { inhaber: map['Bank Inhaber']||'', iban: map['Bank IBAN']||'', bic: map['Bank BIC']||'', bank: map['Bank Name']||'' }
+        });
+      } catch(err) { alert('Excel-Fehler: ' + err.message); }
+    };
+    r.readAsArrayBuffer(file);
+  }
+  input.value = '';
+}
+
+function applyData(d) {
+  if (d.vermieter) {
+    document.getElementById('v_name').value = d.vermieter.name || '';
+    document.getElementById('v_strasse').value = d.vermieter.strasse || '';
+    document.getElementById('v_plz').value = d.vermieter.plz || '';
+  }
+  if (d.mieter) {
+    document.getElementById('m_firma').value = d.mieter.firma || '';
+    document.getElementById('m_person').value = d.mieter.person || '';
+    document.getElementById('m_plz').value = d.mieter.plz || '';
+  }
+  if (d.jahr) document.getElementById('jahr').value = d.jahr;
+  if (d.datum) document.getElementById('datum').value = d.datum;
+  if (d.ustSatz !== undefined) setNumInput('ust_satz', d.ustSatz);
+  if (d.objekt !== undefined) document.getElementById('objekt').value = d.objekt;
+  if (d.vorauszahlungen) {
+    setNumInput('vz_netto', d.vorauszahlungen.netto || 0);
+    setNumInput('vz_ust', d.vorauszahlungen.ust || 0);
+  }
+  if (d.bankverbindung) {
+    document.getElementById('bk_inhaber').value = d.bankverbindung.inhaber || '';
+    document.getElementById('bk_iban').value = d.bankverbindung.iban || '';
+    document.getElementById('bk_bic').value = d.bankverbindung.bic || '';
+    document.getElementById('bk_bank').value = d.bankverbindung.bank || '';
+  }
+  if (Array.isArray(d.positionen)) { positionen = d.positionen; renderPositionen(); }
+  if (typeof d.mitUst === 'boolean') setUst(d.mitUst);
+  berechne();
 }
 
 /* ── Drag & Drop ── */
@@ -661,6 +787,7 @@ dz.addEventListener('drop', e => {
 
 /* ── Init ── */
 document.getElementById('datum').value = new Date().toISOString().split('T')[0];
+document.getElementById('jahr').value = new Date().getFullYear() - 1;
 renderPositionen();
 berechne();
 </script>
