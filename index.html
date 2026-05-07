@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nebenkostenabrechnung</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230c1410'/><text x='16' y='23' font-family='Georgia,serif' font-size='22' font-weight='700' fill='%235d9e7a' text-anchor='middle'>g</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 
@@ -28,7 +29,7 @@
   }
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-weight:300;min-height:100vh;padding:40px 20px 80px;transition:background .25s,color .25s;}
+body{background:var(--bg);color:var(--text);font-feature-settings:"ss01";font-family:'IBM Plex Sans',sans-serif;font-weight:300;min-height:100vh;padding:40px 20px 80px;transition:background .25s,color .25s;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(93,158,122,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(93,158,122,0.04) 1px,transparent 1px);background-size:40px 40px;}
 .container{max-width:900px;margin:0 auto;position:relative;z-index:1;}
 .theme-toggle{position:fixed;top:18px;right:20px;display:flex;gap:3px;z-index:1000;background:var(--surface);border:1px solid var(--border);padding:4px;}
@@ -187,7 +188,7 @@ textarea{resize:vertical;min-height:60px;}
     <div class="grid3" style="margin-top:8px;">
       <label><span class="lbl">Abrechnungsjahr</span><input type="text" id="jahr"></label>
       <label><span class="lbl">Rechnungsdatum</span><input type="date" id="datum"></label>
-      <label><span class="lbl">USt-Satz (%)</span><input type="text" id="ust_satz" value="19" class="num-input" oninput="berechne()"></label>
+      <label><span class="lbl">USt-Satz (%)</span><input type="text" id="ust_satz" value="19" class="num-input" oninput="berechne()" onfocus="this.value=String(parseEU(this.value)||'')" onblur="this.value=fmtInput(parseEU(this.value));berechne()"></label>
     </div>
     <label style="margin-top:8px;"><span class="lbl">Mietgegenstand / Objekt (optional)</span><input type="text" id="objekt" placeholder="z.B. Büroräume EG, Musterstraße 1, 79XXX Musterstadt"></label>
   </div>
@@ -239,8 +240,8 @@ textarea{resize:vertical;min-height:60px;}
   <div class="card">
     <div class="card-title">Vorauszahlungen des Mieters</div>
     <div class="grid2">
-      <label><span class="lbl">Netto-Vorauszahlung (€)</span><input type="text" id="vz_netto" value="0" class="num-input" oninput="berechne()"></label>
-      <label><span class="lbl" id="lbl-vz-ust">USt auf Vorauszahlung (€)</span><input type="text" id="vz_ust" value="0" class="num-input" oninput="berechne()"></label>
+      <label><span class="lbl">Netto-Vorauszahlung (€)</span><input type="text" id="vz_netto" value="0" class="num-input" oninput="berechne()" onfocus="this.value=String(parseEU(this.value)||'')" onblur="this.value=fmtInput(parseEU(this.value));berechne()"></label>
+      <label><span class="lbl" id="lbl-vz-ust">USt auf Vorauszahlung (€)</span><input type="text" id="vz_ust" value="0" class="num-input" oninput="berechne()" onfocus="this.value=String(parseEU(this.value)||'')" onblur="this.value=fmtInput(parseEU(this.value));berechne()"></label>
     </div>
   </div>
 
@@ -279,10 +280,10 @@ textarea{resize:vertical;min-height:60px;}
   <!-- ══ DRUCKBEREICH ══ -->
   <div id="printArea" style="display:none;"></div>
 
-  <p class="disclaimer">Alle Berechnungen sind Näherungswerte. Diese App ersetzt keine steuerliche oder rechtliche Beratung. Angaben ohne Gewähr. · Vorsteuerabzug gemäß § 15 UStG nur bei umsatzsteuerlicher Option des Vermieters.</p>
+  <p class="disclaimer">Alle Berechnungen sind Näherungswerte auf Basis der jeweils angegebenen Rechtsgrundlagen. Individuelle Faktoren bleiben unberücksichtigt. Kein Ersatz für individuelle Steuer- oder Rechtsberatung · Alle Angaben ohne Gewähr · Vorsteuerabzug gemäß § 15 UStG nur bei umsatzsteuerlicher Option des Vermieters.</p>
 </div>
 
-<footer>Robin Glowania</footer>
+<footer>© Robin Glowania · Zuletzt aktualisiert: 07.05.2026</footer>
 
 <script>
 /* ── Theme ── */
@@ -349,10 +350,10 @@ function renderPositionen() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="text" value="${p.name}" placeholder="z.B. Heizung" oninput="positionen[${i}].name=this.value;berechne()"></td>
-      <td><input type="text" value="${fmtInput(p.gesamt)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].gesamt=parseEU(this.value);berechne()"></td>
-      <td><input type="text" value="${fmtInput(p.anteil)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].anteil=parseEU(this.value);berechne()"></td>
+      <td><input type="text" value="${fmtInput(p.gesamt)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].gesamt=parseEU(this.value);berechne()" onfocus="this.value=String(positionen[${i}].gesamt||'')" onblur="this.value=fmtInput(positionen[${i}].gesamt);"></td>
+      <td><input type="text" value="${fmtInput(p.anteil)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].anteil=parseEU(this.value);berechne()" onfocus="this.value=String(positionen[${i}].anteil||'')" onblur="this.value=fmtInput(positionen[${i}].anteil);"></td>
       <td class="col-vost" style="${mitUst?'':'display:none'}">
-        <input type="text" value="${fmtInput(p.vost||0)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].vost=parseEU(this.value);berechne()">
+        <input type="text" value="${fmtInput(p.vost||0)}" placeholder="0,00" class="num-input" oninput="positionen[${i}].vost=parseEU(this.value);berechne()" onfocus="this.value=String(positionen[${i}].vost||'')" onblur="this.value=fmtInput(positionen[${i}].vost);">
       </td>
       <td style="text-align:center;"><button class="pos-delete" onclick="removePosition(${i})">×</button></td>
     `;
