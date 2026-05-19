@@ -50,6 +50,10 @@ footer{text-align:center;padding:32px 0 0;font-family:'IBM Plex Mono',monospace;
    ENDE G-DESIGN
    ═══════════════════════════════════════════════════════════════ */
 
+.hdr-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:4px;}
+.part-of{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--text-muted);text-decoration:none;border:1px solid var(--border);padding:3px 10px;transition:all .2s;}
+.part-of:hover{color:var(--accent);border-color:var(--accent);}
+
 /* ── App-spezifisch ── */
 .card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);padding:28px 32px;margin-bottom:20px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
@@ -126,9 +130,10 @@ textarea{resize:vertical;min-height:60px;}
 .tab-content.active{display:block;}
 
 @media(max-width:600px){
+  body{padding-top:70px;}
   .grid2,.grid3{grid-template-columns:1fr;}
   .card{padding:20px 18px;}
-  .pos-table th:nth-child(3),.pos-table td:nth-child(3){display:none;}
+  .pos-table th:nth-child(4),.pos-table td:nth-child(4){display:none;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -155,7 +160,10 @@ textarea{resize:vertical;min-height:60px;}
 <div class="container">
   <header style="text-align:center;margin-bottom:40px;">
     <h1><span>Nebenkosten</span>abrechnung</h1>
-    <p class="subtitle">Automatische Erstellung mit PDF-Erkennung · Mietrecht</p>
+    <div class="hdr-row">
+      <p class="subtitle">Automatische Erstellung mit PDF-Erkennung · Mietrecht</p>
+      <a href="https://rglowania.github.io/gtools/" class="part-of">Part of gTools ↗</a>
+    </div>
   </header>
 
   <!-- ══ UST TOGGLE ══ -->
@@ -199,8 +207,8 @@ textarea{resize:vertical;min-height:60px;}
 
     <!-- Tabs: Manuell / PDF-Import -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('manuell')">✏ Manuell eingeben</button>
-      <button class="tab-btn" onclick="switchTab('pdf')">📄 PDF-Import (KI)</button>
+      <button class="tab-btn active" onclick="switchTab('manuell', this)">✏ Manuell eingeben</button>
+      <button class="tab-btn" onclick="switchTab('pdf', this)">📄 PDF-Import (KI)</button>
     </div>
 
     <!-- TAB: MANUELL -->
@@ -283,7 +291,7 @@ textarea{resize:vertical;min-height:60px;}
   <p class="disclaimer">Alle Berechnungen sind Näherungswerte auf Basis der jeweils angegebenen Rechtsgrundlagen. Individuelle Faktoren bleiben unberücksichtigt. Kein Ersatz für individuelle Steuer- oder Rechtsberatung · Alle Angaben ohne Gewähr · Vorsteuerabzug gemäß § 15 UStG nur bei umsatzsteuerlicher Option des Vermieters.</p>
 </div>
 
-<footer>© Robin Glowania · Zuletzt aktualisiert: 07.05.2026</footer>
+<footer>© Robin Glowania · Zuletzt aktualisiert: 19.05.2026</footer>
 
 <script>
 /* ── Theme ── */
@@ -299,10 +307,9 @@ function setTheme(t){
 /* ── State ── */
 let mitUst = true;
 let positionen = [
-  { name: 'Gas', gesamt: 1200, anteil: 300, vost: 47.90 },
-  { name: 'Gebäudeversicherung', gesamt: 6400, anteil: 1600, vost: 0 },
-  { name: 'Grundsteuer', gesamt: 1600, anteil: 400, vost: 0 },
-  { name: 'Wasser', gesamt: 800, anteil: 200, vost: 31.93 },
+  { name: '', gesamt: 0, anteil: 0, vost: 0 },
+  { name: '', gesamt: 0, anteil: 0, vost: 0 },
+  { name: '', gesamt: 0, anteil: 0, vost: 0 },
 ];
 let pdfFiles = [];
 
@@ -323,11 +330,11 @@ function setUst(v) {
 }
 
 /* ── Tabs ── */
-function switchTab(tab) {
+function switchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
 /* ── Positionen ── */
@@ -400,7 +407,7 @@ function berechne() {
       <tr class="total-row"><td class="label-col">Ihr Anteil brutto</td><td class="val-col">${fmt(anteilBrutto)}</td></tr>
       <tr><td class="label-col">abzgl. Vorauszahlungen netto</td><td class="val-col">− ${fmt(vzNetto)}</td></tr>
       <tr><td class="label-col">abzgl. USt auf Vorauszahlungen</td><td class="val-col">− ${fmt(vzUst)}</td></tr>
-      <tr class="nachzahlung-row"><td class="label-col">${nachz ? 'Nachzahlung' : 'Erstattung'}</td><td class="val-col" style="color:${nachz?'var(--accent)':'#89c4a2'}">${nachz?'':'−'} ${fmt(Math.abs(diff))}</td></tr>
+      <tr class="nachzahlung-row"><td class="label-col">${nachz ? 'Nachzahlung' : 'Erstattung'}</td><td class="val-col" style="color:${nachz?'var(--accent)':'var(--accent-lt)'}">${nachz?'':'−'} ${fmt(Math.abs(diff))}</td></tr>
     `;
   } else {
     const diff = sumAnteil - vzGesamt;
@@ -408,7 +415,7 @@ function berechne() {
     result = `
       <tr><td class="label-col">Summe Betriebskosten (Ihr Anteil)</td><td class="val-col">${fmt(sumAnteil)}</td></tr>
       <tr><td class="label-col">abzgl. Vorauszahlungen</td><td class="val-col">− ${fmt(vzGesamt)}</td></tr>
-      <tr class="nachzahlung-row"><td class="label-col">${nachz ? 'Nachzahlung' : 'Erstattung'}</td><td class="val-col" style="color:${nachz?'var(--accent)':'#89c4a2'}">${nachz?'':'−'} ${fmt(Math.abs(diff))}</td></tr>
+      <tr class="nachzahlung-row"><td class="label-col">${nachz ? 'Nachzahlung' : 'Erstattung'}</td><td class="val-col" style="color:${nachz?'var(--accent)':'var(--accent-lt)'}">${nachz?'':'−'} ${fmt(Math.abs(diff))}</td></tr>
     `;
   }
 
@@ -417,7 +424,9 @@ function berechne() {
 
 /* ── PDF Upload & KI ── */
 function handlePdfFiles(files) {
+  const MAX = 10 * 1024 * 1024;
   Array.from(files).forEach(f => {
+    if (f.size > MAX) { alert(`${f.name} ist größer als 10 MB und wird übersprungen.`); return; }
     if (!pdfFiles.find(x => x.name === f.name)) {
       pdfFiles.push({ name: f.name, file: f, status: 'pending', result: null });
     }
@@ -538,7 +547,8 @@ function drucken() {
   const vzUst = parseEU(document.getElementById('vz_ust').value) || 0;
   const vzGesamt = mitUst ? vzNetto + vzUst : vzNetto;
   const jahr = document.getElementById('jahr').value;
-  const datum = new Date(document.getElementById('datum').value).toLocaleDateString('de-DE');
+  const datumRaw = document.getElementById('datum').value;
+  const datum = datumRaw ? new Date(datumRaw).toLocaleDateString('de-DE') : '';
 
   let rows = '';
   let sumAnteil = 0;
